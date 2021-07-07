@@ -1,57 +1,80 @@
-import {
-    BrowserRouter as Router,
-    Link
-  } from "react-router-dom";
-  import {useSelector} from "react-redux";
-  import axios from "axios";
-  import { useEffect, useState } from "react";
-  
-  function Home(){
-    const [date , setDate] = useState()
-  const state = useSelector(state => state)
-  useEffect(()=>{
+import { useSelector, useDispatch } from "react-redux";
+import axios from 'axios';
+import { useEffect, useState } from "react";
+
+function Home() {
+  const [date, setDate] = useState();
+  const [cities, setCities] = useState();
+  const [getName, setGetName] = useState()
+  const [country, setCountry] = useState();
+  const [getData, setgetData] = useState(false);
+  let state = useSelector(state => state);
+  useEffect(() => {
     axios.get('https://api.covidtracking.com/v1/states/current.json')
-    .then(function (response) {
-        setDate(response.data)
-        
-      // handle success
-    })
-    .catch(function (error) {
-      // handle error
-      console.log(error);
-    })
-    .then(function () {
-      // always executed
-    });
-  },[])
+      .then(function (response) {
+        setDate(response.data);
+      })
+      .catch(function (error) {
+
+        console.log(error);
+      })
+    axios.get('https://restcountries.eu/rest/v2/all')
+      .then(function (city) {
+        setCities(city.data)
+      })
+      .catch(function (error) {
+
+        console.log(error);
+      })
+
+  }, [])
+
   state.main = date;
-  console.log(state.main);
-  
-      return(
-          <div>
-            <h1 className="mx-5 mt-5 fs-1">COVID CURRENT SITUATION</h1>
-             <div className='d-flex flex-wrap container'>
-             {state?.main?.map((e,i)=>{
-                console.log(e)
-        return(
-          <div key={i} className='col-md-4 border mt-3 mx-5 p-4 shadow rounded'>
-              <div className="bg-primary p-3 mb-5 text-white">
-              <h1>STATE = {e.state}</h1>
-              </div>
-              <h1>DATE = {e.date}</h1>
-              <h1>TOTAL ={e.total}</h1>
-              <h1>POSITIVE ={e.positive}</h1>
-              <h1>NEGATIVE ={e.negative}</h1>
-              <h1>DEATH ={e.death}</h1>
-              <h1>HOSPITALIZED ={e.hospitalized}</h1>
-          </div>
-      )
-      })}
-             </div>
-              
-              
-          </div>
-      )
+  state.countries = cities;
+  let getInd = (i) => {
+    setCountry(i)
+    setgetData(true)
+    let a = state?.main[i].state;
+    let b = "no";
+    for (let i = 0; i < state?.countries.length; i++) {
+      if (a === state?.countries[i].alpha2Code) {
+        b = "yes";
+        setGetName(state?.countries[i].name)
+      }
+    }
+    if(b === "no"){
+      setGetName(a);
+    }
   }
-  
-  export default Home;
+
+  return (
+    <div className="App">
+      <div className="d-flex mt-5">
+        <div className=' continer w-25 '>
+
+          {state?.main?.map((e, i) => {
+            return (
+              <div key={i} className='m-2'>
+                <button className="btn btn-light w-75 rounded shadow" onClick={() => getInd(i)}>STATE ==  {e.state}</button>
+              </div>
+            )
+          })
+          }
+        </div>
+        {getData ? (
+          <div className=" container p-5 h-100  mx-2 bg-white bg-gradient shadow rounded">
+            <h1>State == {getName}</h1>
+            <h1>DATE == {state.main[country].date}</h1>
+            <h1>TOTAL == {state.main[country].total}</h1>
+            <h1>POSITIVE == {state.main[country].positive}</h1>
+            <h1>NEGATIVE == {state.main[country].negative}</h1>
+            <h1>DEATH == {state.main[country].death}</h1>
+            <h1>HOSPITALIZED == {state.main[country].hospitalized}</h1>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+export default Home;
